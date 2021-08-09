@@ -26,16 +26,16 @@
           }
           
           function handleLoadedMetaData() {
-            player.addEventListener(amp.eventName.downloadbitratechanged, handleDownloadBitrateChanged);
+            player.addEventListener(amp.eventName.playbackbitratechanged, handlePlaybackBitrateChanged);
             player.addEventListener(amp.eventName.waiting, handleBuffering);
             player.addEventListener(amp.eventName.resume, handleResume);
           }
           
-          function handleDownloadBitrateChanged(event) {
-            const currentDownloadBitrate = player.currentDownloadBitrate();
+          function handlePlaybackBitrateChanged(event) {
+            const currentBitrate = player.currentPlaybackBitrate();
             const currentEpochTime = Date.now();
             const bitrateSwitchEvent = {
-              bitrate: currentDownloadBitrate,
+              bitrate: currentBitrate,
               timestamp: currentEpochTime,
             };
             bitrateSwitchEvents.push(bitrateSwitchEvent);
@@ -66,13 +66,22 @@
           function generateTelemetryObject() {
             const videoWidth = player.videoWidth();
             const videoHeight = player.videoHeight(); 
-            const buffered = player.buffered();
+            const currentBitrate = player.currentPlaybackBitrate();
+            
+            const streams = player.currentVideoStreamList().streams;
+            let tracks = [];
+            if(Array.isArray(streams) && streams.length > 0) {
+              const stream = streams[0];
+              tracks = !!stream ? stream.tracks : [];
+            }
             
             var telemetry = {
               width: videoWidth,
               height: videoHeight,
+              currentBitrate: currentBitrate,
               bitrateSwitchEvents: bitrateSwitchEvents,
               bufferingEvents: bufferingEvents,
+              availableTracks: tracks,
             }
             
             console.log(telemetry);
